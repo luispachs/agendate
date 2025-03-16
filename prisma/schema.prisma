@@ -13,6 +13,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum AccountType {
+  MASTER
+  ADMIN
+  CONTRIBUTOR
+}
 
 model Account {
   id                 String  @id @default(cuid())
@@ -68,6 +73,7 @@ model User {
   role Role @relation(fields: [roleId], references: [id])
   roleId BigInt 
   userHeadquater UserHeadquarter[]
+  typeAccount AccountType @default(ADMIN)
  
   @@map("users")
 }
