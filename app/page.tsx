@@ -4,7 +4,7 @@ export default function Home() {
 
   return (
       <>
-        <h1>{"prueba"}</h1>
+        <h1>Agendate App - Reserva De Citas</h1>
       </>
   );
 }

@@ -15,143 +15,140 @@ datasource db {
 
 enum AccountType {
   MASTER
-  ADMIN
+  OWNER
   CONTRIBUTOR
 }
 
-model Account {
-  id                 String  @id @default(cuid())
-  userId             String  @map("user_id")
-  type               String
-  provider           String
-  providerAccountId  String  @map("provider_account_id")
-  refresh_token      String? @db.Text
-  access_token       String? @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String? @db.Text
-  session_state      String?
- 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
-  @@unique([provider, providerAccountId])
-  @@map("accounts")
+enum StatusType {
+  ACTIVE
+  INACTIVE
 }
- 
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique @map("session_token")
-  userId       String   @map("user_id")
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
-  @@map("sessions")
+//Business table
+model Business {
+  id BigInt @id @default(autoincrement())
+  name String @db.VarChar(150)
+  address String @db.VarChar(200)
+  phone String @db.VarChar(16) @unique
+  role Role[]
+  users User[]
+  shops Shop[]
+  clients Client[]
+}
+// one-to-many relationship Role have business
+// Roles table
+model Role {
+  id BigInt @id @default(autoincrement())
+  name String @db.VarChar(100)
+  businessId BigInt @map("business_id")
+  business Business @relation(fields: [businessId],references:[id])
+  permission Permission?
+  users User[]
 }
 
-model Business {
-  id  BigInt @id @default(autoincrement())
-  name String
-  address String
-  phone String @unique
-  ownerId String @unique
-  owner User @relation( fields: [ownerId],references: [id])
-  role Role[]
+// one-to-one relationship Permission have a role
+//Permission table
+model Permission {
+  id BigInt @id @default(autoincrement())
+  roleId BigInt @map("role_id") @unique
+  role Role @relation(fields:[roleId],references:[id])
+  canCreateService Boolean @default(false) @map("can_create_service")
+  canUpdateService Boolean @default(false) @map("can_update_service")
+  canDeleteService Boolean @default(false) @map("can_delete_service")
+  canReadService Boolean @default(true)@map("can_read_services")
+  canGenerateReport Boolean @default(false) @map("can_generate_report")
+  canCreateUser Boolean @default(false) @map("can_create_user")
+  canUpdateUser Boolean @default(false) @map("can_update_user")
+  canDeleteUser Boolean @default(false) @map("can_delete_user")
+  canCreateRole Boolean @default(false) @map("can_create_role")
+  canEditRole Boolean @default(false) @map("can_edit_role")
+  canDeleteRole Boolean @default(false) @map("can_delete_role")
+  canCreateReservation Boolean @default(true) @map("can_create_reservation")
+  canUpdateReservation Boolean @default(true) @map("can_update_reservation")
+  canDeleteReservation Boolean @default(true) @map("can_delete_reservation")
+  canReadReservation Boolean @default(true) @map("can_read_reservation")
+  canCreateShop Boolean @default(false) @map("can_create_shop")
+  canUpdateShop Boolean @default(false) @map("can_update_shop")
+  canDeleteShop Boolean @default(false) @map("can_delete_shop")
 }
+
+
+//User Table
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  lastname String?
-  email         String?   @unique
-  emailVerified DateTime? @map("email_verified")
-  image         String?
-  password String?
-  accounts      Account[]
-  sessions      Session[]
-  business Business[] 
-  role Role @relation(fields: [roleId], references: [id])
-  roleId BigInt 
-  userHeadquater UserHeadquarter[]
-  typeAccount AccountType @default(ADMIN)
- 
-  @@map("users")
-}
- 
-model VerificationToken {
-  identifier String
-  token      String
-  expires    DateTime
- 
-  @@unique([identifier, token])
-  @@map("verification_tokens")
-}
-
-
-
-model Role{
-  id BigInt @id @default(autoincrement())
-  name String
-  permissions BigInt
-  business Business @relation(fields: [businessId], references: [id] ,onDelete: Restrict ,onUpdate: Restrict)
+  id  BigInt @id @default(autoincrement())
+  name String @db.VarChar(100)
+  lastname String @db.VarChar(100)
+  email String @unique @db.VarChar(150)
+  password String @db.VarChar(256)
+  phone String @db.VarChar(16) @unique
+  isOwner Boolean @default(false) @map("is_owner")
+  parentId BigInt? @map("parent_id")
+  parent User? @relation("parent",fields:[parentId],references:[id])
+  children User[] @relation("parent")
+  accountType AccountType @default(OWNER) @map("account_type")
   businessId BigInt @map("business_id")
-  user User[]
-  permission Permissions @relation(fields: [permissionId], references: [id]) 
-  permissionId BigInt @unique
+  business Business @relation(fields:[businessId],references:[id])
+  shopUsers ShopUser[]
+  roleId BigInt @map("role_id")
+  role Role @relation(fields: [roleId], references: [id])
 }
 
-model Permissions {
+//Shop table
+model Shop {
   id BigInt @id @default(autoincrement())
-  canCreateService Boolean @default(true)
-  canReadService Boolean @default(true)
-  canUpdateService Boolean @default(false)
-  canDeleteService Boolean @default(false)
-  canCreateSchedule Boolean @default(true)
-  canReadSchedule Boolean @default(true)
-  canUpdateSchedule Boolean @default(false)
-  canDeleteSchedule Boolean @default(false)
-  canSeeReport Boolean @default(true)
-  canDownloadReport Boolean @default(false)
-  canContactClient Boolean @default(false)
-  role Role?
+  name String @db.VarChar(100)
+  address String @db.VarChar(200)
+  phone String @db.VarChar(16) @unique
+  businessId BigInt @map("business_id")
+  business Business @relation(fields:[businessId],references:[id])
+  shopUsers ShopUser[]
 }
 
-model Headquarter {
-  id BigInt @id @default(autoincrement())
-  name String
-  address String @unique
-  phone String @unique
-  userHeadquarter UserHeadquarter[]
-}
-
-model UserHeadquarter {
-  id BigInt @id @default(autoincrement())
+//ShopUser table
+// this table is used to create a many-to-many relationship between User and Shop
+model ShopUser {
+  id BigInt @id @default( autoincrement() )
+  shopId BigInt @map("shop_id")
+  shop  Shop @relation(fields: [shopId], references: [id])
+  userId BigInt @map("user_id")
   user User @relation(fields: [userId], references: [id])
-  userId String
-  headquarter Headquarter @relation(fields: [headquarterId],references: [id])
-  headquarterId BigInt
 }
-
-model Service{
+//service table
+model Service {
   id BigInt @id @default(autoincrement())
-  name String
-  price Float @default(0.0)
-  description String?
+  name String @db.VarChar(150)
+  description String @db.Text
+  price Float @db.DoublePrecision
   serviceModifier ServiceModifier[]
 }
-
-model Modifier{
+//modifier table
+model Modifier {
   id BigInt @id @default(autoincrement())
-  name String
-  price Float @default(0.0)
-  description String?
+  name String @db.VarChar(150)
+  description String @db.Text
+  price Float @db.DoublePrecision
   serviceModifier ServiceModifier[]
 }
-
+//serviceModifier table
+// this table is used to create a many-to-many relationship between Service and Modifier
 model ServiceModifier {
   id BigInt @id @default(autoincrement())
+  serviceId BigInt @map("service_id")
+  service Service @relation(fields: [serviceId], references: [id])
+  modifierId BigInt @map("modifier_id")
   modifier Modifier @relation(fields: [modifierId], references: [id])
-  modifierId BigInt
-  service Service @relation(fields: [serviceId],references: [id])
-  serviceId BigInt
+  status StatusType @default(ACTIVE)
+}
+
+//client table
+model Client {
+  id BigInt @id @default(autoincrement())
+  name String @db.VarChar(100)
+  lastname String @db.VarChar(100)
+  email String @unique @db.VarChar(150)
+  phone String @db.VarChar(16) @unique
+  address String @db.VarChar(200)
+  businessId BigInt @map("business_id")
+  business Business @relation(fields:[businessId],references:[id])
+
 }

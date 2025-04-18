@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 class Client {
     static #client:any= {};
 
-    static getClient(){
+    static getClient():PrismaClient{
         if(Object.hasOwn(this.#client,this.name)){
             return this.#client[this.name];
         }

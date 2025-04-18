@@ -1,7 +1,7 @@
 import {  createHash } from "node:crypto";
 class Password {
     public static hash(text:string) {
-        const hash = createHash("hash256");
+        const hash = createHash("sha256");
         hash.update(text+ " " +process.env.SALT);
 
         return hash.digest('hex');
@@ -17,3 +17,5 @@ class Password {
         return isValid
     }
 }
+
+export {Password};
