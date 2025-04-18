@@ -1,18 +1,18 @@
 "use client";
-import { Grid,Container, Tabs, Tab } from "@mui/material";
-import {  useState ,useRef} from "react";
+import { Grid,Container, Tabs, Tab,Box,Typography } from "@mui/material";
+import {  useState , FormEvent} from "react";
 import { Panel } from "./Panel";
 import {BusinessInfoSection} from "./BusinessInfoSection";
 import { PanelNavigator } from "./PanelNavigator";
 import { OwnerInfoSection} from "./OwnerInfoSection"
 import { POST } from "@/Utils/Services/HTTP";
 import { BodyRequest } from "@/Utils/Services/BodyRequest";
-import {fromEvent} from "rxjs"
-import { JQueryStyleEventEmitter } from "rxjs/internal/observable/fromEvent";
+import { redirect } from "next/navigation";
+import { green,red } from '@mui/material/colors';
 function FormRegister(){
 
     const [tabValue,setTabValue] = useState(0);
-    const form = useRef<HTMLFormElement>(null)
+    
     const [responseStatus,setResponsestatus] =useState<ResponseStatus>(
         {
             status:null,
@@ -27,23 +27,33 @@ function FormRegister(){
         setTabValue(newValue);
       };
 
-      /**
-       *     const submitionHandle = async (ev:FormEvent)=>{
+    const submitionHandle = async (ev:FormEvent)=>{
         ev.preventDefault();
         const formData = new FormData(ev.currentTarget as HTMLFormElement);
         let res = await POST("/api/v1/auth/register",BodyRequest.get(formData),false);
 
-        setResponsestatus(res);      
+        setResponsestatus(res);
+        if(res.status == 200){
+            setTimeout(()=>{
+                redirect("/login")
+            }),
+            1500
+        }
     }
-       */
-
-    fromEvent(form.current as JQueryStyleEventEmitter<any,unknown>,"submit").subscribe
+       
+  
 
     return (
         <Container>
             <Grid container direction={"row"} justifyContent={"center"} alignItems={"center"}>
                 <Grid  size={{xs:12 ,md:12, lg:12}} direction={"column"} component={"section"}>
-                    
+                    {(responseStatus.status !==null) &&
+                        <Box sx={{width:"100%", padding:2, backgroundColor: (responseStatus.status ==200) ? green[200] : red[200] ,borderRadius:2}}> 
+                            <Typography variant="subtitle2" sx={{color:  (responseStatus.status ==200) ? green[800] : red[800]}}>
+                                {responseStatus.message}
+                            </Typography>
+                        </Box>
+                    }
                 </Grid>
             </Grid>
             <Grid container direction={"column"} justifyContent={"center"} alignItems={"center"}>
@@ -54,7 +64,7 @@ function FormRegister(){
                     </Tabs>
                 </Grid>
                 <Grid>
-                    <form ref={form}>
+                    <form onSubmit={submitionHandle}>
                         <Panel index={0} value={tabValue}>
                             <BusinessInfoSection/>
                             <PanelNavigator hasNext={true} hasPrevious={false} next={1} handle={handleClick} submit={false}/>

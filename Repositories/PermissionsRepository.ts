@@ -60,4 +60,28 @@ export class PermissionRepository implements RepositoryInterface<Promise<Permiss
         return await client.permission.create({data});
     }
 
+    static getDefaultPermission(roleId:number):any{
+        return   {
+            roleId,
+            canCreateService:true,
+            canUpdateService:true,
+            canDeleteService:true,
+            canReadService:true,
+            canGenerateReport:true,
+            canCreateUser:true,
+            canUpdateUser:true,
+            canDeleteUser:true,
+            canCreateRole:true,
+            canEditRole:true,
+            canDeleteRole:true,
+            canCreateReservation:true,
+            canUpdateReservation:true,
+            canDeleteReservation:true,
+            canReadReservation:true,
+            canCreateShop:true,
+            canUpdateShop:true,
+            canDeleteShop:true
+        }
+    }
+
 }

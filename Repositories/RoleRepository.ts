@@ -37,4 +37,11 @@ export class RoleRepository implements RepositoryInterface<Promise<Role>>{
 
     }
 
+    static getDefaultRole(businessId:number):any{
+        return {
+                name:"OWNER",
+                businessId,
+            }
+    }
+
 }
